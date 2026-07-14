@@ -1,0 +1,20 @@
+[package]
+name = "lucena-board"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+
+[lib]
+name = "lucena_board"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.23", features = ["abi3-py39"] }
+cozy-chess = "0.3"
+
+[features]
+default = []
+extension-module = ["pyo3/extension-module"]
+
+[profile.release]
+lto = true

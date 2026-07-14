@@ -1,0 +1,34 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "lucena-engine"
+version = "0.1.0"
+description = "Lucena grounding engine — open, stateless chess-truth (board core + Stockfish + Maia)"
+requires-python = ">=3.10"
+license = "AGPL-3.0-or-later"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "python-chess>=1.10",  # tests/tooling ONLY — never imported under python/lucena_engine/
+]
+grpc = [
+    "grpcio>=1.60",        # E2: the gRPC server
+    "grpcio-tools>=1.60",  # E2: proto codegen
+]
+
+[tool.maturin]
+python-source = "python"
+manifest-path = "rust/Cargo.toml"
+module-name = "lucena_engine.lucena_board"
+features = ["pyo3/extension-module"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: needs big downloads or long engine runs",
+    "engine: needs a Stockfish binary (fast at low node counts)",
+]
