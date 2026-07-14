@@ -55,7 +55,10 @@ class BehaviourServicer(pbg.BehaviourServicer):
         board0 = Board(fen)
         mover = board0.side_to_move
         with self._engines.acquire() as engine:
-            nres = find_poisoned_lines(fen, engine, maia, rating=request.rating)
+            # Live params — tuned for ~1-2s latency (the legacy _LIVE_POISONED_LINE), not the heavy
+            # offline defaults (k=6, plies=10) that take ~15s.
+            nres = find_poisoned_lines(fen, engine, maia, rating=request.rating,
+                                       nodes=120_000, k=4, plies=4)
             if not nres.get("has_poisoned_line") or not nres.get("temptations"):
                 return pb.PoisonedLineResp(fen=fen, has_poisoned_line=False)
             top = nres["temptations"][0]
@@ -68,7 +71,7 @@ class BehaviourServicer(pbg.BehaviourServicer):
                     break
                 if board.side_to_move != mover:            # defender: engine's best reply
                     engine.new_game()
-                    a = engine.analyse(board.fen, multipv=1, nodes=200_000)
+                    a = engine.analyse(board.fen, multipv=1, nodes=120_000)
                     uci = a.best.pv[0]
                     decisive = win_pct_from_score(a.best.score) >= 90.0
                 else:                                       # human greedy: Maia top-1
