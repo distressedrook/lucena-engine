@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/distressedrook/lucena-engine/main/assets/logo.png" width="116" alt="lucena-engine">
+</p>
+
 # lucena-engine
 
 [![license](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
