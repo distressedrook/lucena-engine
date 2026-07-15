@@ -44,12 +44,7 @@ Every output is reproducible given the engine limit. No randomness in the facts.
 ```bash
 pip install lucena-engine        # library + `lucena-engine` CLI
 brew install stockfish           # required engine (or apt-get install stockfish)
-```
 
-or via Homebrew (installs Stockfish for you):
-
-```bash
-brew install distressedrook/tap/lucena-engine
 lucena-engine doctor             # check the runtime is wired up
 lucena-engine analyze "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 ```
