@@ -1,5 +1,5 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/distressedrook/lucena-engine/main/assets/logo.png" width="116" alt="lucena-engine">
+<p align="left">
+  <img src="https://raw.githubusercontent.com/distressedrook/lucena-engine/main/assets/wordmark.png" width="340" alt="Lucena">
 </p>
 
 # lucena-engine
