@@ -4,6 +4,7 @@
 [![python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![core](https://img.shields.io/badge/board%20core-Rust-orange.svg)](rust/)
 [![engine](https://img.shields.io/badge/engine-Stockfish%2018-informational.svg)](https://stockfishchess.org/)
+[![maia](https://img.shields.io/badge/behaviour-Maia-9cf.svg)](https://github.com/CSSLab/maia3)
 [![grpc](https://img.shields.io/badge/API-Python%20%7C%20gRPC-success.svg)](proto/)
 
 **Deterministic chess truth for grounding language models.**
