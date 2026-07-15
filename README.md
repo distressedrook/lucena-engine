@@ -41,16 +41,27 @@ Every output is reproducible given the engine limit. No randomness in the facts.
 
 ## Install
 
-Requires **Python ≥ 3.9**, a **Rust toolchain**, and **Stockfish** on your system.
-
 ```bash
-pip install maturin
-maturin develop --release          # builds the Rust board core into the package
-brew install stockfish             # or apt-get install stockfish
-export LUCENA_STOCKFISH=$(which stockfish)   # optional; defaults to `stockfish` on PATH
+pip install lucena-engine        # library + `lucena-engine` CLI
+brew install stockfish           # required engine (or apt-get install stockfish)
 ```
 
-Human-move prediction (Maia) is optional — see [Human-move prediction](#human-move-prediction-maia).
+or via Homebrew (installs Stockfish for you):
+
+```bash
+brew install distressedrook/tap/lucena-engine
+lucena-engine doctor             # check the runtime is wired up
+lucena-engine analyze "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+```
+
+Optional extras: `pip install 'lucena-engine[grpc]'` for the server; human-move prediction (Maia) is
+opt-in via `lucena-engine setup-maia` — see [Human-move prediction](#human-move-prediction-maia).
+
+**From source** (development): needs a **Rust toolchain**.
+```bash
+pip install maturin && maturin develop --release   # builds the Rust board core
+export LUCENA_STOCKFISH=$(which stockfish)          # defaults to `stockfish` on PATH
+```
 
 ---
 
