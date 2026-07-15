@@ -1,7 +1,6 @@
 """`lucena-engine` command-line entry point.
 
-Thin wrapper over the library so an install (pip or Homebrew) puts a usable
-command on PATH:
+Thin wrapper over the library so a `pip install` puts a usable command on PATH:
 
     lucena-engine version          # version + where Stockfish/Maia resolve
     lucena-engine doctor           # check the runtime is wired up

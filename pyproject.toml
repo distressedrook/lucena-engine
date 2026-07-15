@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "lucena-engine"
-version = "0.1.0"
+version = "0.1.1"
 description = "Deterministic chess truth for grounding language models (board core + Stockfish + Maia)"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -45,6 +45,10 @@ python-source = "python"
 manifest-path = "rust/Cargo.toml"
 module-name = "lucena_engine.lucena_board"
 features = ["pyo3/extension-module"]
+# License files are declared in metadata (License-File) but maturin does not auto-pack
+# them into the sdist when manifest-path points into a subdir — include them explicitly
+# so PyPI accepts the upload.
+include = ["LICENSE", "NOTICE"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
