@@ -1,5 +1,7 @@
-//! lucena-board: the product's board core (MIT-licensed foundations only).
-//! cozy-chess supplies bitboards/legality; SAN and SEE are ours.
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Avismara. Part of lucena-engine, licensed under AGPL-3.0-or-later.
+//! lucena-board: the product's board core. SAN and SEE are original to this crate; bitboards and
+//! legality come from the MIT/Apache-licensed `cozy-chess` dependency (see THIRD-PARTY-NOTICES).
 
 mod see;
 

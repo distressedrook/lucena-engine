@@ -1,0 +1,30 @@
+lucena-engine
+Copyright (C) 2026 Avismara
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License along
+with this program. If not, see <https://www.gnu.org/licenses/>.
+
+Network use is distribution. If you run a modified version of this program on a
+server and let users interact with it over a network, you must offer them the
+Corresponding Source of your version (AGPL section 13).
+
+------------------------------------------------------------------------------
+Dual licensing
+
+The copyright holder (Avismara) offers lucena-engine to the public under
+AGPL-3.0-or-later. As sole author, the copyright holder additionally reserves
+the right to use this code under other terms, including within proprietary
+software they own. The AGPL obligations bind licensees (third parties), not the
+author. This is a standard open-core arrangement and does not affect the rights
+granted to you under the AGPL.
+
+Third-party components are listed in THIRD-PARTY-NOTICES.md.
