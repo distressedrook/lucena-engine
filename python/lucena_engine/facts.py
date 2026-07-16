@@ -30,7 +30,7 @@ class Fact:
     debuggability; `concept_id` routes to the mastery model.
     """
 
-    kind: str                       # "hanging" | "threat" | "defender-removed"
+    kind: str                       # "hanging" | "threat" | "defender-removed" | "opening"
     squares: list[str]              # board squares this fact points at
     text: str                       # short human sentence (no id, no eval)
     provenance: str                 # e.g. "see", "nullmove", "static"
@@ -120,7 +120,38 @@ def build_fact_sheet(
 
     raw = _dedupe(raw)
     raw.sort(key=_rank_key)
-    return [f.with_id(f"F{i + 1}") for i, f in enumerate(raw[:top_n])]
+    kept = raw[:top_n]
+
+    # The opening name rides ALONGSIDE the ranking, never inside it. It is context ("this is the
+    # Sicilian"), not a competing observation about the position, and the two do not trade off: given
+    # a salience it would either evict a hanging queen from top_n, or be evicted by one and vanish
+    # exactly when the position is quiet enough for the name to be the most useful thing to say.
+    # `top_n` bounds the TACTICS, so it is applied before this.
+    opening = _opening_fact(board)
+    if opening is not None:
+        kept = kept + [opening]
+    return [f.with_id(f"F{i + 1}") for i, f in enumerate(kept)]
+
+
+def _opening_fact(board) -> "Fact | None":
+    """This position's opening, or None when it isn't a known one (any drill starting mid-game).
+
+    No `squares`: an opening names the whole position, so there is nothing to point an arrow at — and
+    a cited fact draws an arrow. Salience is set but unused for ordering (see above); it is kept
+    non-zero so the field stays meaningful if the fact is ever ranked.
+    """
+    from . import openings
+    name = openings.name_for(board.fen)
+    if not name:
+        return None
+    return Fact(
+        kind="opening",
+        squares=[],
+        text=f"This is the {name}.",
+        provenance="openings-table",
+        salience=0.3,
+        concept_id="openings",
+    )
 
 
 # -- ranking -----------------------------------------------------------------
@@ -128,7 +159,7 @@ def build_fact_sheet(
 # Stable ordering when salience ties: a fixed kind priority, then squares, then
 # text — so the same position always produces the same F-numbering.
 _KIND_ORDER = {"combination": 0, "threat": 1, "fork": 2, "pin": 3, "hanging": 4,
-               "defender-removed": 5}
+               "defender-removed": 5, "opening": 6}
 
 
 def _rank_key(f: Fact):

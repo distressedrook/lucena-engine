@@ -28,7 +28,10 @@ _CLASS = {
     Glyph.OK: "ok", Glyph.DUBIOUS: "dubious", Glyph.MISTAKE: "mistake",
     Glyph.BLUNDER: "blunder", Glyph.ONLY_MOVE: "only_move",
 }
-_THREAT_KINDS = {"threat", "hanging"}
+# "opening" rides along with every focus: it is CONTEXT for whatever was asked, not a tactical
+# observation competing with the others, and it is the one fact a client cannot re-derive from the
+# position. Filtering it out means a narrow focus silently loses it.
+_THREAT_KINDS = {"threat", "hanging", "opening"}
 
 
 def _resolve_uci(board: Board, move: str) -> str:

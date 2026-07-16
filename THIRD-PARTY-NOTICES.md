@@ -16,6 +16,15 @@ linking.
 
 SAN encoding and the SEE (static exchange evaluation) in `rust/src/` are original to this project.
 
+## Bundled data
+
+- **Lichess chess-openings** — <https://github.com/lichess-org/chess-openings> — **CC0-1.0**
+  (public domain dedication). Shipped as `lucena_engine/data/openings.tsv` (~3.7k positions, built
+  from the upstream A/B/C/D/E TSVs into `normalized-FEN<TAB>name`). CC0 imposes no attribution
+  requirement; this notice is here because the work is someone else's and saying so costs nothing.
+  It is data, not code — nothing is linked or imported, so it carries no copyleft implication for the
+  engine's AGPL grant.
+
 ## External programs invoked as subprocesses (arm's-length, over UCI)
 
 These are **not linked**; lucena-engine launches them as separate processes and exchanges UCI text.

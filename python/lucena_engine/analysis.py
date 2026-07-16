@@ -69,8 +69,15 @@ def assemble_analysis(board, best_score, pos, facts) -> list[str]:
     ordered += [t for t in strategic if t not in ordered]
     for t in ordered:
         lines.append(_cap(pos["terms"][t]["standing"]) + ".")
-    if facts:
-        lines.append("Tactics: " + "; ".join(f.text for f in facts) + ".")
+    # The opening is CONTEXT, not a tactic. Joining every fact into one "Tactics:" line told the model
+    # that "This is the Ruy Lopez." is a tactical observation about the position, alongside a hanging
+    # queen — so it gets its own line, and the Tactics line keeps its original meaning.
+    opening = [f for f in facts if f.kind == "opening"]
+    tactics = [f for f in facts if f.kind != "opening"]
+    if opening:
+        lines.append("Opening: " + " ".join(f.text for f in opening))
+    if tactics:
+        lines.append("Tactics: " + "; ".join(f.text for f in tactics) + ".")
     return lines
 
 
