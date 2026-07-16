@@ -4,3 +4,7 @@ rust/target/
 **/__pycache__/
 *.so
 *.abi3.so
+.DS_Store
+
+# generated opening tables (built locally, not source)
+python/lucena_engine/data/
