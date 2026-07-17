@@ -31,6 +31,31 @@ def _table() -> dict[str, str]:
     return table
 
 
+@lru_cache(maxsize=1)
+def _family_sizes() -> dict[str, int]:
+    """Table rows per top-level family ("Ruy Lopez: Morphy Defense, Closed" -> "Ruy Lopez").
+
+    A proxy for how much real continuation theory an opening actually has. Ruy Lopez has 234
+    rows in the shipped table, Sicilian Defense 385 — deep trees where a position briefly
+    dropping out of the table (the table names POSITIONS, not lines) is a coverage artifact, not
+    a sign the players left theory. 57 of the table's 148 families have only 1-2 rows: a single
+    catalogued position with no documented tree beyond it. `book_name`'s caller uses this to
+    decide whether an unnamed-but-recent position should still speak with book-voice confidence.
+    """
+    counts: dict[str, int] = {}
+    for name in _table().values():
+        top = name.split(":", 1)[0].strip()
+        counts[top] = counts.get(top, 0) + 1
+    return counts
+
+
+def family_size(name: str | None) -> int:
+    """Table rows sharing `name`'s top-level family. 0 for a falsy or unrecognised name."""
+    if not name:
+        return 0
+    return _family_sizes().get(name.split(":", 1)[0].strip(), 0)
+
+
 from ._fen import norm_fen as _norm   # the one home for position identity
 
 
