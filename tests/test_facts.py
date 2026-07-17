@@ -408,7 +408,7 @@ def test_hanging_opportunity_worked_example():
     f = facts[0]
     assert f.kind == "hanging"
     assert f.squares == ["e5", "e1"]
-    assert f.text == "Rxe5 wins the knight on e5"
+    assert f.text == "White can play Rxe5, winning the knight on e5"
     assert f.provenance == "see:e1e5"
     assert f.salience == 0.75
     assert f.concept_id == "hanging-pieces"
@@ -421,7 +421,7 @@ def test_hanging_danger_worked_example():
     f = facts[0]
     assert f.kind == "hanging"
     assert f.squares == ["e4", "g6"]
-    assert f.text == "your knight on e4 is hanging — Bxe4 wins it"
+    assert f.text == "Black threatens Bxe4, winning White's knight on e4"
     assert f.provenance == "nullsee:g6e4"
     assert f.salience == 0.80
     assert f.concept_id == "hanging-pieces"
@@ -460,7 +460,7 @@ def test_hanging_opportunity_salience_by_value(fen, squares, name, prov, sal):
     assert len(facts) == 1
     f = facts[0]
     assert f.squares == squares
-    assert f.text == f"Nxd6 wins the {name} on d6"
+    assert f.text == f"White can play Nxd6, winning the {name} on d6"
     assert f.provenance == prov
     assert f.salience == sal
 
@@ -474,7 +474,7 @@ def test_hanging_danger_queen_salience_capped():
     assert len(facts) == 1
     f = facts[0]
     assert f.squares == ["d4", "f5"]
-    assert f.text == "your queen on d4 is hanging — Nxd4 wins it"
+    assert f.text == "Black threatens Nxd4, winning White's queen on d4"
     assert f.provenance == "nullsee:f5d4"
     assert f.salience == 0.98
 
@@ -485,7 +485,7 @@ def test_hanging_danger_pawn_salience():
     assert len(facts) == 1
     f = facts[0]
     assert f.squares == ["d5", "e4"]
-    assert f.text == "your pawn on d5 is hanging — Bxd5 wins it"
+    assert f.text == "Black threatens Bxd5, winning White's pawn on d5"
     assert f.provenance == "nullsee:e4d5"
     assert f.salience == 0.70
 
@@ -497,7 +497,7 @@ def test_hanging_en_passant_victim_square():
     assert len(facts) == 1
     f = facts[0]
     assert f.squares == ["d5", "e5"]
-    assert f.text == "exd6 wins the pawn on d5"
+    assert f.text == "White can play exd6, winning the pawn on d5"
     assert f.provenance == "see:e5d6"
     assert f.salience == 0.65
 
@@ -512,7 +512,7 @@ def test_hanging_in_check_yields_opportunities_only():
     f = facts[0]
     assert f.provenance.startswith("see:")  # opportunity, not "nullsee:"
     assert f.squares == ["f3", "g2"]
-    assert f.text == "gxf3 wins the knight on f3"
+    assert f.text == "White can play gxf3, winning the knight on f3"
     assert f.salience == 0.75
     # control: with the checker moved away the danger *does* fire.
     control = detect_hanging(Board("r3k3/8/8/8/6n1/8/6P1/B3K3 w - - 0 1"))
@@ -537,7 +537,7 @@ def test_hanging_king_as_attacker():
     f = facts[0]
     assert f.kind == "hanging"
     assert f.squares == ["e5", "d4"]
-    assert f.text == "Kxe5 wins the knight on e5"
+    assert f.text == "White can play Kxe5, winning the knight on e5"
     assert f.provenance == "see:d4e5"
     assert f.salience == 0.75
 
@@ -670,7 +670,7 @@ def test_threat_material_capture(engine):
     assert f.concept_id == "tactical-signals"
     assert f.squares == ["g6", "e4"]  # [M_from, M_to]
     assert f.provenance == "nullmove:g6e4"
-    assert f.text == "after a pass, Bxe4 wins the knight on e4"
+    assert f.text == "after a pass, Black plays Bxe4, winning White's knight on e4"
     # material_cp = 300 -> 0.55 + min(0.40, 300/2000) = 0.70 (node-independent).
     assert f.salience == 0.70
     assert f.id == ""

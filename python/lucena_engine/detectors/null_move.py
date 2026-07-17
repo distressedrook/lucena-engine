@@ -98,7 +98,9 @@ def detect_null_move_threat(
                 else f"the opponent threatens mate in {mate} — it starts with {san}")
         salience = 0.98
     elif victim_name:                       # concrete material threat
-        text = f"after a pass, {san} wins the {victim_name} on {dst}"
+        _mover = "White" if board.side_to_move == "white" else "Black"
+        _threat = "Black" if _mover == "White" else "White"
+        text = f"after a pass, {_threat} plays {san}, winning {_mover}'s {victim_name} on {dst}"
         salience = _salience(swing, material)
     elif pass_win <= _LOSING_CEIL and stm_win >= _SAFE_FLOOR:
         # not material, but ignoring it flips the game from OK/winning to losing

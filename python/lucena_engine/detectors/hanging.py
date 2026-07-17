@@ -52,6 +52,11 @@ def _best_capture_per_square(board, occ):
 def detect_hanging(board) -> list[Fact]:
     facts: list[Fact] = []
     occ = occupancy(board)
+    # Name the mover in the fact text — a bare SAN ("Bxg2 wins the bishop") carries no side, and a
+    # reader (esp. freeform, which strips "you/your") then mis-assigns it. An opportunity is the
+    # mover's capture; a danger is the OPPONENT's capture of the mover's own piece.
+    mover = "White" if board.side_to_move == "white" else "Black"
+    opp = "Black" if mover == "White" else "White"
 
     # -- opportunities: what the side to move can win -----------------------
     for sq, (uci, see, victim) in _best_capture_per_square(board, occ).items():
@@ -61,7 +66,7 @@ def detect_hanging(board) -> list[Fact]:
             Fact(
                 kind="hanging",
                 squares=[sq, uci[:2]],
-                text=f"{san} wins the {name} on {sq}",
+                text=f"{mover} can play {san}, winning the {name} on {sq}",
                 provenance=f"see:{uci}",
                 salience=_salience(see, danger=False),
                 concept_id=CONCEPT,
@@ -82,7 +87,7 @@ def detect_hanging(board) -> list[Fact]:
                 Fact(
                     kind="hanging",
                     squares=[sq, uci[:2]],
-                    text=f"your {name} on {sq} is hanging — {san} wins it",
+                    text=f"{opp} threatens {san}, winning {mover}'s {name} on {sq}",
                     provenance=f"nullsee:{uci}",
                     salience=_salience(see, danger=True),
                     concept_id=CONCEPT,
