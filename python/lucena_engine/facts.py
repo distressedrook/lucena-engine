@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .evalmodel import win_pct_from_score
+from .evalmodel import _MISTAKE, win_pct_from_score
 
 
 @dataclass(frozen=True)
@@ -196,9 +196,14 @@ def _reconcile_dangers(facts: list[Fact], threats: list[Fact]) -> list[Fact]:
     return kept
 
 
-# A capture that drops win% by at least this much is a blunder (the eval model's
-# BLUNDER magnitude) — a SEE "win" the engine scores as a blunder is a trap.
-_OPP_DROP_THRESHOLD = 15.0
+# A SEE/geometry "win" (an opportunity hang or a fork) that drops win% by at least this much versus
+# the mover's best move is a FALSE opportunity — it nets material on the target square but the engine
+# rates taking clearly inferior (a positional cost, a zwischenzug, a back-rank mate). Tied to the eval
+# model's MISTAKE line, not a hand-picked number: if the engine would grade the capture a mistake (or
+# worse), the coach must not surface it as "you can win X". Was _BLUNDER (15.0), which let mistake-
+# level false wins through (e.g. Bxd5 in the corpus — wins a pawn, throws away +1.6). Locked by
+# `test_opportunity_reconciliation_corpus`.
+_OPP_DROP_THRESHOLD = _MISTAKE
 
 
 def _reconcile_opportunities(

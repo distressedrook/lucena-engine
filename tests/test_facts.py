@@ -388,6 +388,45 @@ def test_sheet_keeps_sound_opportunity(engine):
     assert any(f.provenance == "see:e1e5" and f.squares[0] == "e5" for f in sheet)
 
 
+# The opportunity gate, tuned by a labeled corpus rather than a hand-picked number. A SEE-flagged
+# capture is a real opportunity only if the engine still ENDORSES taking it; the gate drops any the
+# engine would grade a mistake or worse (tied to eval model `_MISTAKE`). Each case: (fen, capture,
+# should the fact survive reconciliation?).
+_RECON_CORPUS = [
+    # clean, sound wins that ARE the engine's best move — kept (the gate skips the best-move check)
+    ("clean-knight-best", "6k1/5ppp/8/4n3/8/8/5PPP/4R1K1 w - - 0 1", "e1e5", True),
+    ("clean-queen-best",  "6k1/5ppp/3q4/1N6/8/8/5PPP/6K1 w - - 0 1", "b5d6", True),
+    # SEE nets a pawn (Bxd5 exd5 Rxd5) but the engine grades it a MISTAKE — it throws away +1.6 of a
+    # won position. The exact false opportunity `_BLUNDER` (15.0) let through; must now DROP.
+    ("bxd5-mistake", "2rq1rk1/R2n1ppp/4p3/2pb4/5B2/6P1/1Q2PPBP/3R2K1 w - - 0 21", "g2d5", False),
+    # SEE says Rxd5 wins the bishop, but it walks into a back-rank mate (Re1#) — a blunder. DROP.
+    ("backrank-trap", "4r1k1/5ppp/8/3b4/7B/8/5PPP/3R2K1 w - - 0 1", "d1d5", False),
+]
+
+
+@pytest.mark.engine
+@requires_engine
+@pytest.mark.parametrize("label,fen,uci,expect_kept", _RECON_CORPUS, ids=[c[0] for c in _RECON_CORPUS])
+def test_opportunity_reconciliation_corpus(engine, label, fen, uci, expect_kept):
+    # precondition: board-only SEE flags the capture as an opportunity (else the case tests nothing)
+    assert any(f.provenance == f"see:{uci}" for f in detect_hanging(Board(fen))), \
+        f"{label}: SEE should flag {uci} as an opportunity"
+    engine.new_game()
+    sheet = build_fact_sheet(Board(fen), engine=engine, nodes=NODES, top_n=8)
+    kept = any(f.provenance == f"see:{uci}" for f in sheet)
+    assert kept is expect_kept, \
+        f"{label}: expected {'KEPT' if expect_kept else 'DROPPED'}, got {'KEPT' if kept else 'DROPPED'}"
+
+
+def test_opportunity_gate_is_tied_to_the_mistake_line():
+    # The gate is the eval model's MISTAKE threshold, not a hand-picked number — a SEE win the engine
+    # would grade a mistake (not only a blunder) is a false opportunity. Locks against a silent revert
+    # to _BLUNDER (15.0), which let bxd5-mistake through.
+    from lucena_engine.facts import _OPP_DROP_THRESHOLD
+    from lucena_engine.evalmodel import _MISTAKE
+    assert _OPP_DROP_THRESHOLD == _MISTAKE
+
+
 @pytest.mark.engine
 @requires_engine
 def test_sheet_engine_without_limit_raises_value_error(engine):
