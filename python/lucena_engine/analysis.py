@@ -56,19 +56,55 @@ def _eval_line(board, score) -> str:
             f"(eval {white_cp / 100:+.1f}, White {round(white_wp)}%).")
 
 
+# Salience gates for the briefing (cp, White POV). Stricter than positional._LEAD_THRESHOLD (25):
+# the briefing decides what to even STATE, so a near-zero term never becomes a line at all.
+_SHEET_THRESHOLD = 50    # |cp| a term must clear to be worth stating
+_COMP_EVAL = 100         # |eval| <= 1.00 pawn: the position is, on balance, level
+_COMP_HUGE = 150         # ...yet one dimension is worth >~1.5 pawns — that gap is being COMPENSATED
+
+_TERM_LABEL = {"material": "material", "king_safety": "king safety",
+               "activity": "piece activity", "pawns": "pawn structure", "center": "the centre"}
+
+
+def _white_cp(board, score) -> int:
+    """The eval in centipawns, White's point of view (mate → a large signed sentinel)."""
+    if score.is_mate:
+        white_wins = (board.side_to_move == "white") == (score.mate > 0)
+        return 100_000 if white_wins else -100_000
+    cp = score.to_ceiled_cp()
+    return cp if board.side_to_move == "white" else -cp
+
+
 def assemble_analysis(board, best_score, pos, facts) -> list[str]:
     """Pure assembly of the briefing from already-computed pieces — the eval
     `best_score` (Score), the `analyze_positional` dict `pos`, and the fact-sheet
     list `facts`. No engine call, so the MCP layer can reuse facts it already
-    built (for the board arrows) instead of recomputing the sheet."""
+    built (for the board arrows) instead of recomputing the sheet.
+
+    The five positional terms are RANKED by magnitude and only the salient ones are stated: a flat
+    position clears nothing and says so once, instead of five 'even / safe / balanced / healthy'
+    filler lines. The strongest term is named the 'Main factor'. When the eval is level DESPITE a big
+    one-dimension gap, the opposing factors are surfaced as the other side's 'compensation' (a gambit);
+    when the eval is decisive they are merely secondary context, not compensation."""
+    terms = pos["terms"]
     lines = [_eval_line(board, best_score)]
-    lines.append(_cap(pos["terms"]["material"]["standing"]) + ".")
-    # the four strategic terms, leads first (material handled above)
-    strategic = ["king_safety", "activity", "pawns", "center"]
-    ordered = [t for t in pos["leads"] if t in strategic]
-    ordered += [t for t in strategic if t not in ordered]
-    for t in ordered:
-        lines.append(_cap(pos["terms"][t]["standing"]) + ".")
+    eval_cp = _white_cp(board, best_score)
+    ranked = [t for t in sorted(terms, key=lambda k: -abs(terms[k]["cp"]))
+              if abs(terms[t]["cp"]) >= _SHEET_THRESHOLD]
+    if not ranked:
+        lines.append("Nothing sharp positionally — the position is roughly balanced across the board.")
+    else:
+        top = ranked[0]
+        lead_white = terms[top]["cp"] > 0
+        other = "Black" if lead_white else "White"
+        lines.append(f"Main factor — {_cap(terms[top]['standing'])}.")
+        opposing = [t for t in ranked[1:] if (terms[t]["cp"] > 0) != lead_white]
+        if abs(eval_cp) <= _COMP_EVAL and abs(terms[top]["cp"]) >= _COMP_HUGE and opposing:
+            lines.append(f"{other}'s compensation: "
+                         + "; ".join(terms[t]["standing"] for t in opposing) + ".")
+        else:
+            for t in ranked[1:]:                     # eval decisive → the rest is secondary context
+                lines.append(_cap(terms[t]["standing"]) + ".")
     # The opening is CONTEXT, not a tactic. Joining every fact into one "Tactics:" line told the model
     # that "This is the Ruy Lopez." is a tactical observation about the position, alongside a hanging
     # queen — so it gets its own line, and the Tactics line keeps its original meaning.

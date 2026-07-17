@@ -79,10 +79,14 @@ def test_forced_mate_is_named(engine):
 
 
 @requires_engine
-def test_startpos_is_equal_and_even(engine):
+def test_startpos_collapses_to_nothing_sharp(engine):
+    # A flat position states the eval and ONE "nothing sharp" line — not five filler term sentences,
+    # and never the always-on "least active piece" nudge.
     lines = build_analysis(Board(START), engine, nodes=NODES)
     assert "roughly equal" in lines[0].lower()
-    assert any("material is even" in s.lower() for s in lines)
+    assert any("nothing sharp" in s.lower() for s in lines)
+    assert not any("least active piece" in s.lower() for s in lines)
+    assert not any("material is even" in s.lower() for s in lines), "no filler term line at balance"
 
 
 @requires_engine
@@ -90,3 +94,83 @@ def test_tactics_line_present_when_the_fact_sheet_has_facts(engine):
     # SESSION has a forcing sequence + a pin + a defender-removed fact.
     lines = build_analysis(Board(SESSION), engine, nodes=NODES)
     assert any(s.startswith("Tactics:") for s in lines)
+
+
+# -- assemble_analysis: pure ranking + compensation (no engine, no Stockfish) ----------------------
+
+from lucena_engine.analysis import assemble_analysis, _SHEET_THRESHOLD
+
+
+class _Score:
+    def __init__(self, cp, mate=None):
+        self._cp, self.is_mate, self.mate = cp, mate is not None, (mate or 0)
+    def to_ceiled_cp(self):
+        return self._cp
+
+
+class _Bd:
+    def __init__(self, stm="white"):
+        self.side_to_move = stm
+
+
+def _pos(**overrides):
+    """A positional dict with the five terms; each override is term=(cp, standing)."""
+    base = {"material": (0, "material is even"),
+            "king_safety": (0, "both kings are reasonably safe"),
+            "activity": (0, "piece activity is roughly balanced"),
+            "pawns": (0, "both pawn structures are healthy"),
+            "center": (0, "the centre is contested")}
+    base.update(overrides)
+    terms = {k: {"cp": cp, "standing": st} for k, (cp, st) in base.items()}
+    leads = [k for k in sorted(terms, key=lambda k: -abs(terms[k]["cp"])) if abs(terms[k]["cp"]) >= 25][:2]
+    return {"phase": 1.0, "terms": terms, "leads": leads}
+
+
+def test_flat_position_says_nothing_sharp_once():
+    lines = assemble_analysis(_Bd(), _Score(30), _pos(), [])
+    assert sum("Nothing sharp" in s for s in lines) == 1
+    assert not any("Main factor" in s for s in lines)
+    assert not any("balanced across the board" in s and "activity" in s for s in lines)
+
+
+def test_decisive_eval_names_a_main_factor_and_no_compensation():
+    # Black up a bishop, White a bit more active; eval decisive → NOT compensation.
+    pos = _pos(material=(-362, "Black is up a bishop"), activity=(119, "White's pieces are the more active"))
+    lines = assemble_analysis(_Bd(), _Score(-321), pos, [])
+    assert any(s.startswith("Main factor — Black is up a bishop") for s in lines)
+    assert not any("compensation" in s.lower() for s in lines)
+    assert any("more active" in s for s in lines)          # secondary context, plainly stated
+
+
+def test_level_eval_despite_big_gap_is_compensation():
+    # Danish-gambit shape: Black up two pawns, White big activity + centre; eval ≈ level.
+    pos = _pos(material=(-164, "Black is up two pawns"),
+               activity=(101, "White's pieces are the more active"),
+               center=(60, "White controls the centre"))
+    lines = assemble_analysis(_Bd(stm="black"), _Score(47), pos, [])   # black to move, +47 stm ≈ -47 W? see note
+    joined = " ".join(lines)
+    assert "Main factor — Black is up two pawns" in joined
+    assert "White's compensation:" in joined
+    assert "more active" in joined and "centre" in joined
+
+
+def test_sub_threshold_terms_are_dropped():
+    # 40 < 50 threshold → not stated; 60 ≥ 50 → stated.
+    pos = _pos(material=(-300, "Black is up a piece"),
+               center=(60, "White controls the centre"),
+               pawns=(40, "White's pawns are slightly better"))
+    lines = " ".join(assemble_analysis(_Bd(), _Score(-250), pos, []))
+    assert "controls the centre" in lines
+    assert "pawns are slightly better" not in lines
+    assert _SHEET_THRESHOLD == 50
+
+
+def test_no_least_active_nudge_ever_reaches_the_sheet():
+    pos = _pos(activity=(120, "White's pieces are the more active"), material=(-200, "Black is up the exchange"))
+    lines = " ".join(assemble_analysis(_Bd(), _Score(-150), pos, []))
+    assert "least active piece" not in lines
+
+
+def test_eval_line_stays_first():
+    lines = assemble_analysis(_Bd(), _Score(-321), _pos(material=(-362, "Black is up a bishop")), [])
+    assert lines[0].startswith("White to move")

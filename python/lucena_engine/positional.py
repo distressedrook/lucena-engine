@@ -254,18 +254,15 @@ def _activity_term(board, occ, attacks, ph: float) -> dict:
         if worst[color] is not None:
             _, s, pc = worst[color]
             features[f"worst_piece_{color}"] = {"square": s, "piece": pc}
-    stm = board.side_to_move
-    nudge = ""
-    w = worst.get(stm)
-    if w is not None:
-        nudge = (f"; {_side_name(stm)}'s least active piece is the "
-                 f"{PIECE_NAME.get(w[2], w[2])} on {w[1]}")
+    # The least-active piece lives in `features` (worst_piece_*) for a caller that wants it — NOT
+    # glued onto the standing, where it fired on every activity mention (even at dead balance, always
+    # naming the side-to-move's back rook) and dragged noise into the briefing.
     if cp >= _LEAD_THRESHOLD:
-        standing = "White's pieces are the more active" + nudge
+        standing = "White's pieces are the more active"
     elif cp <= -_LEAD_THRESHOLD:
-        standing = "Black's pieces are the more active" + nudge
+        standing = "Black's pieces are the more active"
     else:
-        standing = "piece activity is roughly balanced" + nudge
+        standing = "piece activity is roughly balanced"
     return {"cp": round(cp), "standing": standing, "features": features}
 
 
