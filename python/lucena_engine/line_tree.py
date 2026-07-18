@@ -46,9 +46,9 @@ VERIFY_MULTIPV = 3      # the deep pass searches NARROW (top-N), not full width:
                         # 3 lines is enough to see the winner AND whether a 2nd move also wins.
 DEFENSE_BAND = 12.0     # opponent replies within this win% of their best are real tries
 MAX_DEFENSES = 5        # cap the opponent branching (recorded via `truncated` when it bites)
-MAX_DEPTH = 6           # student moves deep
+MAX_DEPTH = 6           # student moves deep (safety cap; the real terminator is "everything wins")
 MATE_HORIZON = 6        # drill forced mates up to mate-in-N; longer is technique, not a tactic
-MATE_MAX_REPLIES = 16   # safety cap on branching every reply in mate mode (logged if it bites)
+MATE_MAX_REPLIES = 16   # safety cap on mate-mode branching (the real terminator is "multiple winning moves -> stop")
 
 
 def _band_floor(best_win: float) -> float | None:
@@ -165,9 +165,24 @@ def _student_node(board, engine, depth, max_depth, discover, verify) -> dict:
         only = _only_move(a.lines)
         verified = True
 
-    # MATE takes priority over material AND over the depth cap: a forced mate must
-    # be caught all the way to # — every mating line, not just one — bounded by
-    # MATE_HORIZON.
+    # A forced mate within the horizon is the point of the node — BUT it is still bounded by the depth
+    # cap. Without this, a mate net past the tactic (win the queen, THEN mate) enumerated every mating
+    # line against every defense, ignoring `max_depth`, and a single puzzle ballooned to ~66 solve
+    # nodes / 23+ forced moves — unfinishable, so it never concluded and the reveal never fired. Past
+    # the cap, a forced mate is a decisive result: end the drill on it (`done`), don't drill it out.
+    if depth >= max_depth:
+        return _done(board, "mate" if (mate_moves and mate_in <= MATE_HORIZON) else "depth")
+
+    # "If there are multiple winning moves, STOP." No unique move to find means the tactic is over —
+    # the position is converted (2+ comparable moves, so anything wins) or lost. Conclude here, BEFORE
+    # the mate branch. Otherwise a position won on material with an INCIDENTAL forced mate (win the
+    # queen, THEN a mate exists) drilled the entire mate net — one puzzle ballooned to ~66 solve nodes
+    # / 23+ forced moves, unfinishable, so it never concluded and the poisoned reveal never fired. A
+    # genuine mate/only-move puzzle keeps a UNIQUE move (`only` is not None), so the drill continues.
+    if only is None:
+        # lost (best doesn't hold) or converted (2+ comparable moves — result banked).
+        return _done(board, _leaf_reason(a.lines), a.best.score)
+
     if mate_moves and mate_in <= MATE_HORIZON:
         options = [{
             "uci": u, "san": board.san(u),
@@ -175,13 +190,6 @@ def _student_node(board, engine, depth, max_depth, discover, verify) -> dict:
                                    discover, verify, all_moves=True),
         } for u in mate_moves]
         return {"kind": "mate", "fen": board.fen, "mate_in": mate_in, "options": options}
-
-    if depth >= max_depth:
-        return _done(board, "depth")
-
-    if only is None:
-        # lost (best doesn't hold) or converted (2+ comparable moves — result banked).
-        return _done(board, _leaf_reason(a.lines), a.best.score)
 
     move, score = only
     best_win = win_pct_from_score(a.best.score)

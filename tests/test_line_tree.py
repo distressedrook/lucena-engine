@@ -43,6 +43,31 @@ def _has_branching_reply(node) -> bool:
     return False
 
 
+# A "win the queen" fork whose won position ALSO has a forced mate. The drill must stop when the
+# tactic is over (many moves win), not drill the incidental mate net — that ballooned this puzzle to
+# ~66 solve nodes / 23 forced moves, so it never concluded and the poisoned reveal never fired.
+FORK_THEN_MATE = "1k5r/4q3/1pp5/3bNp2/6p1/P5P1/1P3P2/3QRK2 w - - 0 1"
+
+
+def _solve_nodes(node) -> int:
+    c = 1 if node.get("kind") in ("solve", "mate") else 0
+    if node.get("after"):
+        c += _solve_nodes(node["after"])
+    for d in (node.get("defenses") or []):
+        c += _solve_nodes(d["then"])
+    for o in (node.get("options") or []):
+        c += _solve_nodes(o["then"])
+    return c
+
+
+@requires_engine
+def test_stops_when_multiple_moves_win_not_the_mate_net(engine):
+    tree = build_line_tree(FORK_THEN_MATE, engine, discover=DISCOVER, verify=VERIFY)
+    assert tree["root"]["kind"] == "solve" and tree["root"]["expect_san"] == "Qxd5"
+    n = _solve_nodes(tree["root"])
+    assert n <= 15, f"the drill should stop when multiple moves win; got {n} solve nodes (mate-net blowup)"
+
+
 @requires_engine
 def test_root_is_the_forced_only_move(engine):
     tree = build_line_tree(SESSION, engine, discover=DISCOVER, verify=VERIFY)
