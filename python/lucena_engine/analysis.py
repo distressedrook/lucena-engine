@@ -37,7 +37,10 @@ def _eval_line(board, score) -> str:
             return f"{turn} to move and is checkmated."
         # `mate` is signed from the side-to-move POV: >0 means the mover delivers it
         mover = turn if score.mate > 0 else ("Black" if stm == "white" else "White")
-        return f"{turn} to move; {mover} has a forced mate in {abs(score.mate)}."
+        m = abs(score.mate)
+        if m <= 5:
+            return f"{turn} to move; {mover} has a forced mate in {m}."
+        return f"{turn} to move; {mover} is easily winning."   # too far out to recite a count
     wp_stm = win_pct_from_score(score)
     white_wp = wp_stm if stm == "white" else 100 - wp_stm
     white_cp = score.to_ceiled_cp() if stm == "white" else -score.to_ceiled_cp()

@@ -38,9 +38,11 @@ def detect_combination(board, engine, *, nodes=None, movetime_ms=None) -> list[F
     # -- forced mate for the side to move ---------------------------------
     mate = best.score.mate
     if mate is not None and mate > 0:
+        text = (f"there's a forced mate in {mate} — it starts with {san}" if mate <= 5
+                else f"{san} starts an easily winning attack")   # too far out to recite a count
         return [Fact(
             kind="combination", squares=squares,
-            text=f"there's a forced mate in {mate} — it starts with {san}",
+            text=text,
             provenance=f"mate:{first}", salience=0.99, concept_id=CONCEPT,
         )]
 

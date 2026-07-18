@@ -99,8 +99,12 @@ def detect_null_move_threat(
     _mover = "White" if board.side_to_move == "white" else "Black"
     _threat = "Black" if _mover == "White" else "White"
     if mate is not None and mate > 0:       # a mate is brewing — the loudest threat
-        text = (f"{_threat} threatens mate: {san}" if mate == 1
-                else f"{_threat} threatens mate in {mate} — it starts with {san}")
+        if mate == 1:
+            text = f"{_threat} threatens mate: {san}"
+        elif mate <= 5:
+            text = f"{_threat} threatens mate in {mate} — it starts with {san}"
+        else:                               # too far out to recite a count — it's simply winning
+            text = f"{_threat} is easily winning — the attack starts with {san}"
         salience = 0.98
     elif victim_name:                       # concrete material threat
         text = f"after a pass, {_threat} plays {san}, winning {_mover}'s {victim_name} on {dst}"

@@ -113,6 +113,15 @@ class _Bd:
         self.side_to_move = stm
 
 
+def test_long_mate_reads_as_easily_winning():
+    # A mate ≤5 recites the count; a mate too far out (>5) is called what it is — 'easily winning' —
+    # rather than an uninstructive 'mate in 13'.
+    from lucena_engine.analysis import _eval_line
+    assert "forced mate in 5" in _eval_line(_Bd("white"), _Score(0, mate=5))
+    assert "easily winning" in _eval_line(_Bd("white"), _Score(0, mate=6))
+    assert "mate in" not in _eval_line(_Bd("black"), _Score(0, mate=13)), "long mates don't recite a count"
+
+
 def _pos(**overrides):
     """A positional dict with the five terms; each override is term=(cp, standing)."""
     base = {"material": (0, "material is even"),
