@@ -93,22 +93,25 @@ def detect_null_move_threat(
     mate = reply.score.mate                 # opponent's mate distance after the pass
     pass_win = 100.0 - opp_free_win         # YOUR win% if you ignore the threat
 
+    # Absolute colours, never "you"/"the opponent" — relative words invert with side-to-move and were
+    # the source of perspective flips (a fact carried onto the wrong player). _mover is the side that
+    # would pass; _threat is the side that gets the free move.
+    _mover = "White" if board.side_to_move == "white" else "Black"
+    _threat = "Black" if _mover == "White" else "White"
     if mate is not None and mate > 0:       # a mate is brewing — the loudest threat
-        text = (f"the opponent threatens mate: {san}" if mate == 1
-                else f"the opponent threatens mate in {mate} — it starts with {san}")
+        text = (f"{_threat} threatens mate: {san}" if mate == 1
+                else f"{_threat} threatens mate in {mate} — it starts with {san}")
         salience = 0.98
     elif victim_name:                       # concrete material threat
-        _mover = "White" if board.side_to_move == "white" else "Black"
-        _threat = "Black" if _mover == "White" else "White"
         text = f"after a pass, {_threat} plays {san}, winning {_mover}'s {victim_name} on {dst}"
         salience = _salience(swing, material)
     elif pass_win <= _LOSING_CEIL and stm_win >= _SAFE_FLOOR:
         # not material, but ignoring it flips the game from OK/winning to losing
         standing = "winning" if stm_win >= 62.0 else "holding"
-        text = f"warning — ignore {san} and you go from {standing} to losing"
+        text = f"warning — if {_mover} ignores {san}, {_mover} goes from {standing} to losing"
         salience = 0.95
     else:                                   # a real but non-flipping positional threat
-        text = f"after a pass, {san} is strong for the opponent"
+        text = f"after a pass, {san} is strong for {_threat}"
         salience = _salience(swing, 0)
 
     return [

@@ -725,8 +725,9 @@ def test_threat_positional_branch(engine):
     assert f.kind == "threat"
     assert f.squares == ["e8", "e1"]
     assert f.provenance == "nullmove:e8e1"
-    # a mate threat is now flagged as a mate (loudest severity tier).
-    assert f.text == "the opponent threatens mate: Re1#"
+    # a mate threat is now flagged as a mate (loudest severity tier), attributed by absolute colour
+    # (White to move passes -> Black is the side that gets the free move and mates).
+    assert f.text == "Black threatens mate: Re1#"
     assert f.salience == 0.98
     assert f.id == ""
 
