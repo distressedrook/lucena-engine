@@ -1,6 +1,19 @@
-"""Lucena grounding engine: board core + Stockfish session, eval semantics, facts."""
+"""lucena-engine: the Stockfish/Maia wrapper package.
 
-from .board import Board, STARTPOS, PieceOn
+One package wrapping both engines behind clean session APIs, plus the eval
+vocabulary their answers speak (Score / Analysis / Line, the lichess-verbatim
+win% model, glyph classification) and the SF NNUE eval parser.
+
+Slimmed 2026-07-23: the Rust board core, board-truth modules (positional,
+detect, pgn, openings, reads, _fen) and the gRPC surface moved to the private
+`lucena-core`; the tactical layer (detectors/facts/hints/line_tree/puzzle/
+brilliant) moved to the private `lucena-tactics`; game-import assembly
+(analysis, gamepass) moved to the private backend. What remains is exactly
+the part that must exist as a public, license-clean boundary: GPL engines
+(Stockfish, Maia) are spoken to ONLY as subprocesses over UCI, and nothing
+copyleft is linked in (tests/test_gpl_hygiene.py enforces it).
+"""
+
 from .uci import Engine, EngineError, Line, Analysis
 from .evalmodel import (
     win_pct,
@@ -9,21 +22,9 @@ from .evalmodel import (
     parse_score,
     Score,
     Glyph,
+    MISTAKE,
 )
 from .nnue import PieceValue, parse_piece_values, piece_value_map
-from .facts import Fact, build_fact_sheet
-from .hints import Hint, derive_hints
-from .brilliant import is_brilliant, is_material_sacrifice, classify_brilliant
-from .pgn import parse_pgn, Game, Ply, PgnError
-from .gamepass import run_pass
-from .detectors import (
-    detect_hanging,
-    detect_defender_removed,
-    detect_fork,
-    detect_pin,
-    detect_combination,
-    detect_null_move_threat,
-)
 
 __all__ = [
     "Engine",
@@ -36,25 +37,8 @@ __all__ = [
     "parse_score",
     "Score",
     "Glyph",
+    "MISTAKE",
     "PieceValue",
     "parse_piece_values",
     "piece_value_map",
-    "Fact",
-    "build_fact_sheet",
-    "Hint",
-    "derive_hints",
-    "is_brilliant",
-    "is_material_sacrifice",
-    "classify_brilliant",
-    "detect_hanging",
-    "detect_defender_removed",
-    "detect_fork",
-    "detect_pin",
-    "detect_combination",
-    "detect_null_move_threat",
-    "parse_pgn",
-    "Game",
-    "Ply",
-    "PgnError",
-    "run_pass",
 ]

@@ -1,22 +1,20 @@
 [build-system]
-requires = ["maturin>=1.7,<2.0"]
-build-backend = "maturin"
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "lucena-engine"
-version = "0.1.2"
-description = "Deterministic chess truth for grounding language models (board core + Stockfish + Maia)"
+version = "0.2.0"
+description = "Stockfish + Maia wrapper: engine sessions over UCI, eval semantics (win%, Score, glyphs), NNUE parsing"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "AGPL-3.0-or-later"
 authors = [{ name = "Avismara" }]
-keywords = ["chess", "stockfish", "maia", "llm", "grounding", "rag", "gRPC"]
+keywords = ["chess", "stockfish", "maia", "uci", "eval"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Rust",
     "Topic :: Games/Entertainment :: Board Games",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
@@ -27,28 +25,18 @@ Homepage = "https://github.com/distressedrook/lucena-engine"
 Repository = "https://github.com/distressedrook/lucena-engine"
 Issues = "https://github.com/distressedrook/lucena-engine/issues"
 
-[project.scripts]
-lucena-engine = "lucena_engine.cli:main"
-
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
     "python-chess>=1.10",  # tests/tooling ONLY — never imported under python/lucena_engine/
 ]
-grpc = [
-    "grpcio>=1.60",        # E2: the gRPC server
-    "grpcio-tools>=1.60",  # E2: proto codegen
-]
 
-[tool.maturin]
-python-source = "python"
-manifest-path = "rust/Cargo.toml"
-module-name = "lucena_engine.lucena_board"
-features = ["pyo3/extension-module"]
-# License files are declared in metadata (License-File) but maturin does not auto-pack
-# them into the sdist when manifest-path points into a subdir — include them explicitly
-# so PyPI accepts the upload.
-include = ["LICENSE", "NOTICE"]
+
+[tool.setuptools]
+package-dir = { "" = "python" }
+
+[tool.setuptools.packages.find]
+where = ["python"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
