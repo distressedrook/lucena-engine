@@ -139,3 +139,9 @@ def parse_score(token: str, value: int) -> Score:
     if token == "mate":
         return Score(mate=value)
     raise ValueError(f"unknown score token: {token}")
+
+
+# Public alias (2026-07-23, core-extraction Phase 2): consumers outside this
+# package (lucena_core, lucena-tactics' facts port) need the mistake threshold;
+# reaching for the private name was always a wart (facts.py did it).
+MISTAKE = _MISTAKE
