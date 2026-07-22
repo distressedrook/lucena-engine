@@ -7,8 +7,6 @@ from __future__ import annotations
 import grpc
 
 from ..board import Board
-from ..evalmodel import win_pct_from_score
-from ..poisoned_line_detector import find_poisoned_lines
 from .._pb import engine_pb2 as pb
 from .._pb import engine_pb2_grpc as pbg
 
@@ -50,40 +48,12 @@ class BehaviourServicer(pbg.BehaviourServicer):
                       "CommonMistakes not yet ported (see docs/grounding-engine-api.md)")
 
     def PoisonedLine(self, request, context):
-        maia = self._get_maia(context)
-        fen = request.fen
-        board0 = Board(fen)
-        mover = board0.side_to_move
-        with self._engines.acquire() as engine:
-            # Live params — tuned for ~1-2s latency (the legacy _LIVE_POISONED_LINE), not the heavy
-            # offline defaults (k=6, plies=10) that take ~15s.
-            nres = find_poisoned_lines(fen, engine, maia, rating=request.rating,
-                                       nodes=120_000, k=4, plies=4)
-            if not nres.get("has_poisoned_line") or not nres.get("temptations"):
-                return pb.PoisonedLineResp(fen=fen, has_poisoned_line=False)
-            top = nres["temptations"][0]
-            seed_san = top["seeds"][0]
-            seed_uci = board0.uci(seed_san)
-            board = board0.apply(seed_uci)
-            steps = [pb.PoisonedStep(san=seed_san, fen=board.fen)]
-            for _ in range(10):
-                if not board.legal_moves():
-                    break
-                if board.side_to_move != mover:            # defender: engine's best reply
-                    engine.new_game()
-                    a = engine.analyse(board.fen, multipv=1, nodes=120_000)
-                    uci = a.best.pv[0]
-                    decisive = win_pct_from_score(a.best.score) >= 90.0
-                else:                                       # human greedy: Maia top-1
-                    tops = maia.top_human_moves(board.fen, request.rating, n=1)
-                    if not tops:
-                        break
-                    uci = tops[0]["uci"]
-                    decisive = False
-                san = board.san(uci)
-                board = board.apply(uci)
-                steps.append(pb.PoisonedStep(san=san, fen=board.fen))
-                if decisive:
-                    break
-        return pb.PoisonedLineResp(fen=fen, has_poisoned_line=True, poisoned_line=steps,
-                                   fatal=top.get("fatal", ""), idea=top.get("idea", ""))
+        # Moved to lucena-tactics 2026-07-22 (src/poisoned_line_detector.py):
+        # lucena-engine is kept as thin, license-neutral infrastructure
+        # (board core + UCI/gRPC transport); the detector is differentiated
+        # coaching logic and belongs in a private repo. Callers on this RPC
+        # surface were already unused in production (the backend calls the
+        # detector in-process); this wire contract is left defined but
+        # unserved rather than deleted, matching CommonMistakes below.
+        context.abort(grpc.StatusCode.UNIMPLEMENTED,
+                      "PoisonedLine moved to lucena-tactics/src/poisoned_line_detector.py")

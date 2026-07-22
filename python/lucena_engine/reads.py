@@ -2,8 +2,7 @@
 
 These are pure functions of a position — the deterministic facts the coach must
 never compute itself (piece roster, material standing, eval-in-words, PV in SAN).
-They live engine-side now: `positional`/`poisoned_line_detector` reach here for
-`material`, reversing the old `..mcp.response` dependency.
+They live engine-side now: `positional` reaches here for `material`, reversing the old `..mcp.response` dependency (`poisoned_line_detector` did too, until it moved to lucena-tactics 2026-07-22 — still calls it, now as an external package import of lucena_engine.reads).
 """
 
 from __future__ import annotations

@@ -133,9 +133,10 @@ def test_predicts_the_human_move_on_a_tactic(maia):
 
 
 # -- the policy-emitting production wrapper ----------------------------------
-# Regression guard for the "green tests, dead in prod" bug: find_poisoned_lines
-# needs Maia's REAL policy probability, which only tools/maia_policy_uci.py emits.
-# The fake-based detector suite can't catch a wrapper that silently drops it.
+# Regression guard for the "green tests, dead in prod" bug: lucena-tactics'
+# poisoned_line_detector.py needs Maia's REAL policy probability, which only
+# tools/maia_policy_uci.py emits. That consumer's fake-based detector suite
+# can't catch a wrapper that silently drops it, so the contract is pinned here.
 
 @pytest.fixture(scope="module")
 def policy_maia():

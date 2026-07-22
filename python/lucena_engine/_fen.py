@@ -3,7 +3,7 @@
 Pure functions over FEN text — position identity, rank expansion, the piece a move
 captures (board truth, not the coach's guess), move-number/side, and PGN-numbered
 line rendering. This is the ONE home for `_norm_fen`; the former duplicates in
-`openings`/`poisoned_line_detector` import it from here.
+`openings` imports it from here (`poisoned_line_detector` did too, until it moved to lucena-tactics 2026-07-22 — still calls norm_fen, now as an external package import of lucena_engine._fen).
 """
 
 from __future__ import annotations
