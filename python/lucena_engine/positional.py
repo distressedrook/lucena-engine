@@ -200,9 +200,25 @@ def _king_safety_term(board, occ, ph: float) -> dict:
                 open_files.append(_FILES[f])
                 file_penalty += 15 if f not in enemy_pawn_files else 10
 
+        # centred, uncastled king (2026-07-22): a king still on the d/e
+        # file with enemy heavies on and an open/half-open file beside it
+        # is the classic "stuck in the middle" danger — which the other
+        # components structurally miss (the zone gate needs TWO attackers,
+        # so a lone staring queen counts zero; the shield happily credits
+        # e6/f7 pawns while the king's ADDRESS is the problem). Gated on
+        # `open_files` so it can never fire in closed positions or at the
+        # start position (all files closed there), and on `heavy` via
+        # open_files' own gate.
+        center_penalty = 0
+        if kf in (3, 4) and open_files:
+            has_q = any(p.piece == "Q" and p.color == enemy
+                        for p in occ.values())
+            center_penalty = 35 if has_q else 15
+
         # shield/file penalties are middlegame concepts; zone attacks keep a
         # small endgame tail (a cornered king can still be hunted)
-        danger[color] = _taper(zone_penalty + shield_penalty + file_penalty,
+        danger[color] = _taper(zone_penalty + shield_penalty + file_penalty
+                               + center_penalty,
                                zone_penalty / 4.0, ph)
         features[color] = {
             "king": ksq,
@@ -211,6 +227,7 @@ def _king_safety_term(board, occ, ph: float) -> dict:
             "attack_units": units,
             "shield_pawns": shield,
             "open_files_nearby": open_files,
+            "centered_uncastled": center_penalty > 0,
         }
 
     cp = (danger["black"] - danger["white"]) + (pst["white"] - pst["black"])
