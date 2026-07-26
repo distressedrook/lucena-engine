@@ -141,7 +141,12 @@ def parse_score(token: str, value: int) -> Score:
     raise ValueError(f"unknown score token: {token}")
 
 
-# Public alias (2026-07-23, core-extraction Phase 2): consumers outside this
+# Public aliases (2026-07-23, core-extraction Phase 2): consumers outside this
 # package (lucena_core, lucena-tactics' facts port) need the mistake threshold;
 # reaching for the private name was always a wart (facts.py did it).
+# 2026-07-26: the other two joined it — a presentation layer that refines these
+# glyphs into a finer ladder has to agree with them EXACTLY, and the only way
+# to guarantee that is to read the same constants rather than restate them.
+DUBIOUS = _DUBIOUS
 MISTAKE = _MISTAKE
+BLUNDER = _BLUNDER
