@@ -23,7 +23,7 @@ subprocesses over UCI text.
 
 > **v0.2.0 slimmed this package to exactly that wrapper.** Earlier releases
 > also bundled a Rust board core, tactical detectors, fact sheets, and a gRPC
-> server; those grew into private downstream layers of the
+> server; those grew into downstream layers of the
 > [Lucena](https://github.com/distressedrook) coaching stack and left the
 > public package. If you need board geometry, use
 > [python-chess](https://github.com/niklasf/python-chess); this package
